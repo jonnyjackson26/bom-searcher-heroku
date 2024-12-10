@@ -1,8 +1,9 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 import json
 from flask_cors import CORS
+import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="searcher-bom/dist", static_url_path="")
 CORS(app)
 
 # Load the JSON file once when the server starts
@@ -11,13 +12,11 @@ with open("data/bom.json", "r", encoding="utf-8") as f:
 
 @app.route("/search", methods=["POST"])
 def search_bom():
-    # Get the search term from the request
     data = request.json
     search_term = data.get("search", "")
     case_sensitive = data.get("case_sensitive", False)
     results = []
 
-    # Perform the search
     for book, chapters in bom_data.items():
         for chapter, verses in chapters.items():
             for verse_number, verse_text in enumerate(verses, start=1):
@@ -29,9 +28,17 @@ def search_bom():
                         "verse": verse_number,
                         "text": verse_text
                     })
-    
-    # Return the results as JSON
+
     return jsonify(results)
+
+# Serve React frontend
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve(path):
+    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, "index.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
