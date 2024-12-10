@@ -12,7 +12,7 @@ function App() {
     if (!search.trim()) return;
 
     try {
-      const response = await axios.post("http://localhost:5000/search", {
+      const response = await axios.post("/search", {
         search: search,
         case_sensitive: caseSensitive,
       });
